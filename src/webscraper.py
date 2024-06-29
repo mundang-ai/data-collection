@@ -46,10 +46,8 @@ class webscraper():
 
     for item in range(int(verses[0])+1, int(verses[-1])+1):
       pattern += f'+{book}.{chapter}.{item}'
-    # pattern = f'{book}.{chapter}.{verse}'
-    # print(pattern)
+
     verses_text_html = self.soup.find_all(name='span', attrs={'data-usfm': pattern}, recursive=True)
-    # print(verses_text_html[0])
     verses_text_html = [self.remove_element(element, 'span', class_='ChapterContent_note__YlDW0') for element in verses_text_html]
     verses_text = verses_text_html[0].get_text()
     return verses_text
@@ -75,13 +73,6 @@ class BibleWebscraper():
     self.bible_code = bible_code
     self.bible_corpus = bible_corpus
     self.bible = []
-
-#   def _contains_letter(self, s):
-#     for char in s:
-#         if char.isalpha():
-#             return True
-#     return False
-
 
   def _process_chapter(self, book:str, chapter:int, url:str):
     page = webscraper(url)
