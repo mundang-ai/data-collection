@@ -46,11 +46,13 @@ class webscraper():
 
     for item in range(int(verses[0])+1, int(verses[-1])+1):
       pattern += f'+{book}.{chapter}.{item}'
-
     verses_text_html = self.soup.find_all(name='span', attrs={'data-usfm': pattern}, recursive=True)
     verses_text_html = [self.remove_element(element, 'span', class_='ChapterContent_note__YlDW0') for element in verses_text_html]
-    verses_text = verses_text_html[0].get_text()
-    return verses_text
+    if len(verses_text_html) == 0:
+      return ''
+    else:
+      verses_text = verses_text_html[0].get_text()
+      return verses_text
 
 class BibleWebscraper():
   def __init__(self,
@@ -73,6 +75,13 @@ class BibleWebscraper():
     self.bible_code = bible_code
     self.bible_corpus = bible_corpus
     self.bible = []
+    
+  def _has_redirection(self,url):
+    try:
+      response = requests.head(url, allow_redirects=True)
+      return response.history
+    except requests.exceptions.RequestException:
+      return []
 
   def _process_chapter(self, book:str, chapter:int, url:str):
     page = webscraper(url)
@@ -113,10 +122,13 @@ class BibleWebscraper():
   def _process_book(self, book:str):
     for chapter in tqdm(range(1, self.bible_corpus[book]+1), desc=book, leave=False):
       url = self.base_url + book + '.' + str(chapter) + '.' + self.bible_code
+      if self._has_redirection(url):
+        print(' The link: '+ url+' has redirection')
+        continue
       self.bible.extend(self._process_chapter(book, chapter, url))
 
-  def process(self):
-    for book in tqdm(self.bible_corpus.keys(), desc='Bible'):
+  def process(self, label=''):
+    for book in tqdm(self.bible_corpus.keys(), desc=f'{label} Bible'):
       self._process_book(book)
     self.bible = pd.DataFrame(self.bible, columns=['book', 'chapter', 'verse', 'text-'+self.bible_code])
     
