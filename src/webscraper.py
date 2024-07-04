@@ -9,18 +9,34 @@ from tqdm import tqdm
 import re
 
 class webscraper():
+  """
+  A class for scraping data from a website.
+
+  Attributes:
+    url (str): The URL of the website to scrape.
+    html_content (str): The HTML content of the website.
+    soup (BeautifulSoup): The BeautifulSoup object representing the parsed HTML content.
+
+  Methods:
+    remove_element: Removes a specific element from the parsed HTML content.
+    get_numbers_at_beginning: Extracts the numbers at the beginning of a text.
+    get_titles: Retrieves the titles from the parsed HTML content.
+    get_verses: Retrieves the verse numbers from the parsed HTML content.
+    get_verses_text: Retrieves the text of specific verses from the parsed HTML content.
+  """
+
   def __init__(self, url):
     self.url = url
     self.html_content = requests.get(url).text
     self.soup = BeautifulSoup(self.html_content, 'lxml')
 
-  def remove_element(self, soup, tag, class_):
+  def _remove_element(self, soup, tag, class_):
     element = soup.find(tag, class_=class_)
     if element is not None:
       element.extract()
     return soup
 
-  def get_numbers_at_beginning(self, text):
+  def _get_numbers_at_beginning(self, text):
     match = re.match(r'^\d+', text)
     if match:
       numbers_str = match.group()
@@ -39,15 +55,13 @@ class webscraper():
     return verses_numbers
 
   def get_verses_text(self, book:str, chapter:int, verse:int):
-    # verses = [self.get_numbers_at_beginning(element) for element in verse.split('-')]
     verses = verse.split('-')
     pattern = f'{book}.{chapter}.{verses[0]}'
-    # verses.pop(0)
 
     for item in range(int(verses[0])+1, int(verses[-1])+1):
       pattern += f'+{book}.{chapter}.{item}'
     verses_text_html = self.soup.find_all(name='span', attrs={'data-usfm': pattern}, recursive=True)
-    verses_text_html = [self.remove_element(element, 'span', class_='ChapterContent_note__YlDW0') for element in verses_text_html]
+    verses_text_html = [self._remove_element(element, 'span', class_='ChapterContent_note__YlDW0') for element in verses_text_html]
     if len(verses_text_html) == 0:
       return ''
     else:
@@ -55,6 +69,24 @@ class webscraper():
       return verses_text
 
 class BibleWebscraper():
+  """
+  A class for scraping Bible text from a website.
+
+  Attributes:
+    base_url (str): The base URL of the website.
+    bible_code (str): The code representing the version of the Bible.
+    bible_corpus (dict): A dictionary mapping book codes to the number of chapters in each book.
+               Default value is a dictionary containing the number of chapters for each book
+               in the King James Version of the Bible.
+    bible (list): A list to store the scraped Bible text.
+
+  Methods:
+    _has_redirection(url): Checks if a URL has redirection.
+    _process_chapter(book, chapter, url): Processes a chapter of the Bible.
+    _process_book(book): Processes a book of the Bible.
+    process(label=''): Scrapes the entire Bible.
+
+  """
   def __init__(self,
                base_url:str,
                bible_code:str,
