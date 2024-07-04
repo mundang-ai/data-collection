@@ -1,4 +1,4 @@
 # data-collection
 Data Collection Project - Mundang Language
 
-![cover-image](docs/cover-image.jpg)
+<img style="width: 100%; height: auto;" src="docs/cover-image.jpg" alt="Cover Image">
