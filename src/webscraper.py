@@ -163,4 +163,3 @@ class BibleWebscraper():
     for book in tqdm(self.bible_corpus.keys(), desc=f'{label} Bible'):
       self._process_book(book)
     self.bible = pd.DataFrame(self.bible, columns=['book', 'chapter', 'verse', 'text-'+self.bible_code])
-    

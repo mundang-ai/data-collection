@@ -4,6 +4,8 @@ import docx
 import pandas as pd
 from pdf2docx import Converter
 import docx
+import os
+
 def pdf_to_docx(pdf_file, docx_file, encoding='utf-8'):
     """
     Convert a PDF file to a DOCX file using the specified encoding.
@@ -36,7 +38,9 @@ def clean(text):
         'ॣ': 'Ɓ',
         'փ': 'ĩ',
         '\u0b5a' : 'Ə',
-        'ઞ' : 'Ŋ'
+        'ઞ' : 'Ŋ',
+        '॥': 'ɗ',
+        'qqn': "quelqu'un",
     }
     cleaned_text = text
     for char, replacement in replacements.items():
@@ -65,12 +69,19 @@ def main():
     for i in range(len(texts)):
         mdng_cleaned = clean(texts[i][0])
         fr_cleaned = clean(texts[i][1])
-        texts[i] = texts[i] + [''.join(mdng_cleaned.split('.')[1:]), ''.join(fr_cleaned.split('.')[1:])]
-        texts[i][0] = mdng_cleaned.split('.')[0]
-        texts[i][1] = fr_cleaned.split('.')[0]
+        texts[i] = texts[i] + ['. '.join(mdng_cleaned.split('.')[1:]), '. '.join(fr_cleaned.split('.')[2:])]
+        texts[i][0] = '. '.join(mdng_cleaned.split('.')[:1])
+        texts[i][1] = ''.join(fr_cleaned.split('.')[:2])
     
     df = pd.DataFrame(texts, columns=['mdng', 'fr', 'mdng-remain', 'fr-remain'])
     df.to_csv('../data/dictionary.csv', index=False)
+    
+    docsx_path = '../docs/mdng-dictionary.docx'
+    if os.path.exists(docsx_path):
+        os.remove(docsx_path)
+        print(f"File '{docsx_path}' has been deleted.")
+    else:
+        print(f"File '{docsx_path}' does not exist.")
 
 if __name__ == "__main__":
     main()
